@@ -1,0 +1,17 @@
+[package]
+name = "sc-rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = {version="*",features=["net","macros","rt","rt-multi-thread","io-util","sync","time"]}
+serde = { version = "*", features = [ "derive" ] }
+clap = {version = "*", features = ["derive"] }
+axum = {version = "*",features=["ws"]}
+serde_json = "*"
+simple_logger = "*"
+log = "*"
+async-trait = "*"
+encoding = "*"
