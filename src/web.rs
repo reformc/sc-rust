@@ -80,7 +80,7 @@ async fn handler_channel_ws(headers:HeaderMap,mut socket:WebSocket,sender:Arc<Se
     let mut receiver = sender.subscribe();
     socket.send(Message::Text("{\"msg\":\"success\"}".to_string())).await.unwrap();
     loop {
-        match timeout(Duration::from_secs(6), receiver.recv()).await{
+        match timeout(Duration::from_secs(10), receiver.recv()).await{
             Ok(rec)=>{
                 match rec{
                     Ok(msg)=>{
