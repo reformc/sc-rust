@@ -19,24 +19,19 @@ where
         let auth_header = req
         .headers
         .get(axum::http::header::AUTHORIZATION)
-        .and_then(|value| value.to_str().ok());
+        .and_then(|value| value.to_str().ok()).unwrap_or("");
         let cookie_str = req
         .headers
         .get(axum::http::header::COOKIE)
         .and_then(|value| value.to_str().ok()).unwrap_or("");
-        if let Some(username)=auth_header{
-            let cookie = Cookie::new(cookie_str);
-            let session_id = cookie.get("JSESSIONID").unwrap_or("null");
-            log::info!("session_id: {}",session_id);
-            if check_session_id(username, session_id).await{
-                    return Ok(Self);
-            }            
-            if username==cookie_str{
-                log::info!("websocket login success {}",username);
+        let cookie = Cookie::new(cookie_str);
+        let session_id = cookie.get("JSESSIONID").unwrap_or("null");
+        log::info!("session_id: {}",session_id);
+        if check_session_id(auth_header, session_id).await{
                 return Ok(Self);
-            }
         }
         log::warn!("auth error");
+        //Ok(Self)
         Err(StatusCode::UNAUTHORIZED)
         //Err(Redirect::to(Uri::from_static("/login")))
     }
@@ -62,7 +57,7 @@ impl<'a> Cookie<'a>{
     }
 }
 
-//检查auth和session是否一致，此处仅为示范，并无实际意义，可自行修改为有意义的鉴权代码。
+//此处仅为示范，并无实际意义，可自行修改为有意义的鉴权代码。
 async fn check_session_id(user:&str,session_id:&str)->bool{
-    user ==session_id
+    session_id=="test" || user==session_id
 }

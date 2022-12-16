@@ -10,9 +10,9 @@ mod gps;
 #[derive(Parser)]
 #[clap(
     author="reform <reformgg@gmail.com>", 
-    version="0.1.1",
-    about="sc数据转web",
-    long_about = "sc数据转web和websocket"
+    version="0.2.0",
+    about="sc数据转web、websocket、sse",
+    long_about = "sc数据转web、websocket、sse"
 )]
 struct Args{
     /// 登录用户名

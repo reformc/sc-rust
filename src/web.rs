@@ -1,8 +1,10 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc, convert::Infallible};
+use tokio_stream::StreamExt as _ ;
+use futures::stream::Stream;
 use axum::{
     routing::get, 
     Router,  
-    middleware::from_extractor, extract::{WebSocketUpgrade, ws::{WebSocket, Message}}, http::HeaderMap, response::Response
+    middleware::from_extractor, extract::{WebSocketUpgrade, ws::{WebSocket, Message}}, http::HeaderMap, response::{Response, Sse, sse::{Event, KeepAlive}, Html}
 };
 use tokio::{sync::broadcast::Sender,time::{Duration,timeout}};
 use crate::{web_auth, sc_auth};
@@ -14,9 +16,15 @@ pub async fn run(port:u16,user:Arc<String>,addr:Arc<String>,sender:Arc<Sender<St
         let channel_sender = Arc::clone(&sender);
         move|headers,ws|channel_ws(headers,ws,channel_sender)
     }))
+    .route("/hzbit/video/gps-sse",get({
+        let channel_sender = Arc::clone(&sender);
+        move|headers|channel_sse(headers,channel_sender)
+    }))
     .route("/hzbit/video/device",get({move||get_devices(user.clone(), addr.clone())
     }))
     .route_layer(from_extractor::<web_auth::RequireAuth>())//websocket通过header鉴权
+    .route("/hzbit/video/sse-test",get(sse_test))
+    .route("/hzbit/video/ws-test",get(ws_test))
     .route("/",get(home));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -38,7 +46,27 @@ async fn home()->String{
     "杭州比特视频监控设备事件接口".to_string()
 }
 
-pub async fn channel_ws(headers:HeaderMap,ws:WebSocketUpgrade,sender:Arc<Sender<String>>)->Response{
+async fn channel_sse(headers:HeaderMap,sender:Arc<Sender<String>>)->Sse<impl Stream<Item = Result<Event, Infallible>>>{
+    let auth = headers.
+    get(axum::http::header::AUTHORIZATION)
+    .and_then(|v|v.to_str().ok())
+    .map(|v|v.to_string())
+    .unwrap_or("null".to_string());
+    log::debug!("channel_sse connect,auth is {}",&auth);
+    let receiver = sender.subscribe();
+    let stream = futures::stream::unfold(receiver,|mut receiver|{
+        async move{
+            match receiver.recv().await{
+                Ok(v)=>Some((Event::default().data(v),receiver)),
+                Err(_)=>None
+            }
+
+        }
+    }).map(Ok);
+    Sse::new(stream).keep_alive(KeepAlive::default())
+}
+
+async fn channel_ws(headers:HeaderMap,ws:WebSocketUpgrade,sender:Arc<Sender<String>>)->Response{
     ws.on_upgrade(move |socket|{handler_channel_ws(headers,socket, sender)})
 }
 
@@ -48,7 +76,7 @@ async fn handler_channel_ws(headers:HeaderMap,mut socket:WebSocket,sender:Arc<Se
     .and_then(|v|v.to_str().ok())
     .map(|v|v.to_string())
     .unwrap_or("null".to_string());
-    log::info!("lock_open_ws connect,auth is {}",&auth);
+    log::debug!("channel_ws connect,auth is {}",&auth);
     let mut receiver = sender.subscribe();
     socket.send(Message::Text("{\"msg\":\"success\"}".to_string())).await.unwrap();
     loop {
@@ -68,4 +96,56 @@ async fn handler_channel_ws(headers:HeaderMap,mut socket:WebSocket,sender:Arc<Se
             }
         };
     }
+}
+
+async fn sse_test()->(HeaderMap,Html<&'static str>){
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        axum::http::header::SET_COOKIE,
+        format!("JSESSIONID={}","test").as_str().parse().unwrap(),);
+    (
+        headers,
+Html(r#"<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            var source = new EventSource("/hzbit/video/gps-sse",{
+                headers: {
+                    "AUTHORIZATION": "test"
+                }
+            });
+            source.addEventListener("message",function(event){
+                console.log(event.data);
+            })
+        </script>
+    </head>
+    <div id="message">sse message echo in console log</div>
+</html>"#)
+        )
+}
+
+async fn ws_test()->(HeaderMap,Html<&'static str>){
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        axum::http::header::SET_COOKIE,
+        format!("JSESSIONID={}","test").as_str().parse().unwrap(),);
+    (
+        headers,
+Html(r#"<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            const socket = new WebSocket("ws://127.0.0.1/hzbit/video/gps-ws");
+            socket.withCredentials = true;
+            socket.headers = {
+                "AUTHORIZATION": "test"
+            };
+            socket.onmessage = function(event) {
+                console.log("Received data: " + event.data);
+            }
+        </script>
+    </head>
+    <div id="message">websocket message echo in console log</div>
+</html>"#)
+        )
 }
