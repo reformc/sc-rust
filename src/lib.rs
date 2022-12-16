@@ -43,10 +43,9 @@ pub async fn run(){
         _=>simple_logger::init_with_level(log::Level::Error).unwrap()
     }
     log::info!("username:{},password:{},connect addr:{},log level:{}",&args.user,&args.pass,&args.addr,&args.log_level);
-    let mut c = sc8310::Client::new(&args.user,&args.pass,&args.addr);
-    let sender = c.sender.clone();
-    let user=Arc::new(args.user.to_string());
-    let addr= Arc::new(args.addr.replace("8310", "8330"));
-    tokio::spawn(web::run(args.web_port,user,addr, sender));
-    c.run().await;
+    let mut c = sc8310::Client::new(&args.user,&args.pass,&args.addr);//创建一个连接sc服务的对象
+    let user=Arc::new(args.user.to_string());//创建一个可跨线程使用的用户名弱引用。
+    let addr= Arc::new(args.addr.replace("8310", "8330"));//sc服务请求设备信息的地址，跨线程使用的弱引用
+    tokio::spawn(web::run(args.web_port,user,addr, c.sender.clone()));//启动一个web服务器，包含设备信息服务，websocket服务，sse服务
+    c.run().await;//运行上面创建的sc服务，开始连接sc服务器并接收设备的数据。
 }

@@ -26,6 +26,7 @@ pub struct Device{
     pub state:u8
 }
 
+//获取此用户权限下所有的设备分组。
 pub async fn device_info(user:Arc<String>,addr:Arc<String>)->Result<DeviceGather,Box<dyn Error>>{
     let user = (*user).clone();
     let addr = (*addr).clone();
@@ -57,6 +58,7 @@ pub async fn device_info(user:Arc<String>,addr:Arc<String>)->Result<DeviceGather
     })
 }
 
+//获取设备分组里，用户权限下的设备。
 async fn get_camer_info(group_id:usize,user:&str,addr:&str)->Result<Vec<Device>,Box<dyn Error>>{
     let mut stream = TcpStream::connect(addr).await?;
     stream.writable().await?;

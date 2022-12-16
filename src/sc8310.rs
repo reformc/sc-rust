@@ -7,11 +7,13 @@ use std::sync::Arc;
 use tokio::io::BufReader;
 use crate::{error::CustomizeError,gps};
 
-fn parse_command(s:&str)->Result<Vec<Vec<String>>,Box<dyn Error>>{
-    let s = s.replace("\r\n", ",");
-    Ok(s.split(",").map(|cell|
-        cell.split(" ").map(|c|c.to_string()).collect::<Vec<String>>()
-    ).collect::<Vec<Vec<String>>>())
+fn parse_command<'a>(s:&'a str)->Vec<Vec<&'a str>>{
+    s.split(",")
+    .map(|cell|
+        cell.split(" ")
+        .map(|c|c)
+        .collect::<Vec<&str>>())
+    .collect::<Vec<Vec<&str>>>()
 }
 pub struct Client{
     pub sender:Arc<Sender<String>>,
@@ -66,13 +68,14 @@ impl Client{
         loop{
             match lines.next_line().await? {
                 Some(line)=>{
-                    let command = parse_command(&line)?;
+                    let line = line.replace("\r\n", ",");
+                    let command = parse_command(&line);
                     match &command[0][0] as &str{
                         "ACTPORT"=>{//设备信息端口
                             self.act_port = command[1][1].parse::<u16>()?;
                         },
                         "SEVERNAME"=>{//服务器名称，客户端使用
-                            self.server_name = command[1][1].clone();
+                            self.server_name = command[1][1].to_string();
                         },
                         "200"=>{
                             continue;
@@ -93,6 +96,7 @@ impl Client{
                             match gps::parse_state(&line){
                                 Ok(stat)=>{
                                     let _ = sender.send(serde_json::to_string(&stat).unwrap_or("".to_string()));//向广播通道发送
+                                    log::info!("{:?}",stat)
                                 },
                                 Err(e)=>{log::debug!("{}",e)}
                             }

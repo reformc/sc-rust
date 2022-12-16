@@ -12,19 +12,18 @@ use crate::{web_auth, sc_auth};
 pub async fn run(port:u16,user:Arc<String>,addr:Arc<String>,sender:Arc<Sender<String>>){
     log::info!("web listen on {}",port);
     let app = Router::new()
-    .route("/hzbit/video/gps-ws",get({
+    .route("/hzbit/video/gps-ws",get({//websocket服务
         let channel_sender = Arc::clone(&sender);
         move|headers,ws|channel_ws(headers,ws,channel_sender)
     }))
-    .route("/hzbit/video/gps-sse",get({
+    .route("/hzbit/video/gps-sse",get({//sse服务
         let channel_sender = Arc::clone(&sender);
         move|headers|channel_sse(headers,channel_sender)
     }))
-    .route("/hzbit/video/device",get({move||get_devices(user.clone(), addr.clone())
-    }))
-    .route_layer(from_extractor::<web_auth::RequireAuth>())//websocket通过header鉴权
-    .route("/hzbit/video/sse-test",get(sse_test))
-    .route("/hzbit/video/ws-test",get(ws_test))
+    .route("/hzbit/video/device",get(move||get_devices(user.clone(), addr.clone())))//获取设备信息接口
+    .route_layer(from_extractor::<web_auth::RequireAuth>())//鉴权中间件
+    .route("/hzbit/video/sse-test",get(sse_test))//sse调试页面
+    .route("/hzbit/video/ws-test",get(ws_test))//ws调试页面
     .route("/",get(home));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -60,7 +59,6 @@ async fn channel_sse(headers:HeaderMap,sender:Arc<Sender<String>>)->Sse<impl Str
                 Ok(v)=>Some((Event::default().data(v),receiver)),
                 Err(_)=>None
             }
-
         }
     }).map(Ok);
     Sse::new(stream).keep_alive(KeepAlive::default())
