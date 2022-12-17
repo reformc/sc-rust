@@ -1,5 +1,5 @@
 windows下编译为exe程序或linux下编译为linux程序:
-carogo build --release
+cargo build --release
 
 windows下可用docker编译为linux程序：
 docker run -it --rm -v ${pwd}:/workdir -v ~/.cargo/git:/root/.cargo/git -v ~/.cargo/registry:/root/.cargo/registry registry.gitlab.com/rust_musl_docker/image:stable-latest cargo build --release -vv --target=x86_64-unknown-linux-musl
