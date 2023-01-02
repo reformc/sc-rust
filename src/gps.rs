@@ -5,22 +5,21 @@ use crate::error;
 
 //将gps数据转为struct
 pub fn parse_gps(line:&str)->Result<GpsInfo,Box<dyn Error>>{
-    let a = line.split(", ").map(|c|c.to_string()).collect::<Vec<String>>()[1].clone();
-    let a = a.split(" ").map(|c|c.to_string()).collect::<Vec<String>>();
+    let a = line.split(", ").collect::<Vec<&str>>()[1].clone();
+    let a = a.split(" ").collect::<Vec<&str>>();
     let id = a[0].parse::<u16>()?;
     let gps = a[2].clone();
-    gps_type(id,&gps)
+    gps_type(id,gps)
 }
 
 //根据gps串口模式的数据格式转为struct
 fn gps_type(id:u16,info:&str)->Result<GpsInfo,Box<dyn Error>>{
-    let a = info.split("\\c").map(|c|c.to_string()).collect::<Vec<String>>();
+    let a = info.split("\\c").collect::<Vec<&str>>();
     log::debug!("{},,{:?}",info,a);
-    let g_type = a[0].clone();
     if a[2]!="A"{
         return Err(error::CustomizeError::new(-1, "gps status is not A"));
     }
-    match &g_type as &str{
+    match a[0] as &str{
         "$GPRMC"|"$GNRMC"=>{
             Ok(GpsInfo{
                 id,
@@ -58,7 +57,7 @@ fn parse_time(t:&str,d:&str)->String{
 
 //经纬度转wgs84格式
 fn parse_gps_wgs84(data:&str)->Result<f32,Box<dyn Error>>{
-    match data.split(".").map(|c|c.to_string()).collect::<Vec<String>>()[0].len(){
+    match data.split(".").collect::<Vec<&str>>()[0].len(){
         5=>{Ok(data[0..3].parse::<f32>()?+data[3..].parse::<f32>()?/60.0)},
         4=>{Ok(data[0..2].parse::<f32>()?+data[2..].parse::<f32>()?/60.0)},
         _=>{Err(error::CustomizeError::new(-1, "gps parse error"))}
