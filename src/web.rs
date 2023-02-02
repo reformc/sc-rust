@@ -107,17 +107,30 @@ Html(r#"<!DOCTYPE html>
 <html>
     <head>
         <script>
+        function init(){
             var source = new EventSource("/hzbit/video/gps-sse",{
                 headers: {
                     "AUTHORIZATION": "test"
                 }
             });
             source.addEventListener("message",function(event){
-                console.log(event.data);
-            })
+                //console.log(event.data);
+                writeToScreen(event.data);
+            });
+        }
+        function writeToScreen(message) {
+            var pre = document.createElement("span");
+            pre.innerHTML = message;
+            output.appendChild(pre);
+            var children = output.childNodes;
+            if(children.length>100){
+                output.removeChild(output.firstChild);
+            }
+        }
+        window.addEventListener("load", init, false);
         </script>
     </head>
-    <div id="message">sse message echo in console log</div>
+    <div id="output" style="height:600px;width:1024px;resize:both;overflow:scroll;"></div>
 </html>"#)
         )
 }
@@ -139,11 +152,22 @@ Html(r#"<!DOCTYPE html>
                 "AUTHORIZATION": "test"
             };
             socket.onmessage = function(event) {
-                console.log("Received data: " + event.data);
+                //console.log("Received data: " + event.data);                
+                writeToScreen(event.data);
             }
+            
+        function writeToScreen(message) {
+            var pre = document.createElement("span");
+            pre.innerHTML = message;
+            output.appendChild(pre);
+            var children = output.childNodes;
+            if(children.length>100){
+                output.removeChild(output.firstChild);
+            }
+        }
         </script>
     </head>
-    <div id="message">websocket message echo in console log</div>
+    <div id="output" style="height:600px;width:1024px;resize:both;overflow:scroll;"></div>
 </html>"#)
         )
 }
