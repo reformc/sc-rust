@@ -143,7 +143,7 @@ Html(r#"<!DOCTYPE html>
 <html>
     <head>
         <script>
-            const socket = new WebSocket("ws://" + window.location.host + ":" + window.location.port +"/hzbit/video/gps-ws");
+            const socket = new WebSocket("ws://" + window.location.host +"/hzbit/video/gps-ws");
             socket.withCredentials = true;
             socket.headers = {
                 "AUTHORIZATION": "test"
