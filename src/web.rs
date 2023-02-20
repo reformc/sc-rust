@@ -123,6 +123,8 @@ Html(r#"<!DOCTYPE html>
             if(children.length>100){
                 output.removeChild(output.firstChild);
             }
+            var body_div = document.createElement("output");
+            body_div.scrollTop = body_div.scrollHeight;
         }
         window.addEventListener("load", init, false);
         </script>
@@ -161,6 +163,8 @@ Html(r#"<!DOCTYPE html>
             if(children.length>100){
                 output.removeChild(output.firstChild);
             }
+            var body_div = document.createElement("output");
+            body_div.scrollTop = body_div.scrollHeight;
         }
         </script>
     </head>
