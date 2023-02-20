@@ -123,7 +123,7 @@ Html(r#"<!DOCTYPE html>
             if(children.length>100){
                 output.removeChild(output.firstChild);
             }
-            var body_div = document.createElement("output");
+            var body_div = document.getElementById("output");
             body_div.scrollTop = body_div.scrollHeight;
         }
         window.addEventListener("load", init, false);
@@ -163,7 +163,7 @@ Html(r#"<!DOCTYPE html>
             if(children.length>100){
                 output.removeChild(output.firstChild);
             }
-            var body_div = document.createElement("output");
+            var body_div = document.getElementById("output");
             body_div.scrollTop = body_div.scrollHeight;
         }
         </script>
