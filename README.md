@@ -1,13 +1,15 @@
-windows下编译为exe程序或linux下编译为linux程序:
+编译命令:
 cargo build --release
 
-windows下可用docker编译为linux程序：
-docker run -it --rm -v ${pwd}:/workdir -v ~/.cargo/git:/root/.cargo/git -v ~/.cargo/registry:/root/.cargo/registry registry.gitlab.com/rust_musl_docker/image:stable-latest cargo build --release -vv --target=x86_64-unknown-linux-musl
+交叉编译请使用docker和cross(cross安装命令：cargo install cross)工具，编译命令为：
+cross build --release --target=mipsel-unknown-linux-musl    #编译为mipsel架构的路由器运行的程序)
+cross build --release --target=x86-unknown-linux-gnu    #编译为x86架构的linux运行程序)
 
 运行时需加参数，不加参数时将使用以下默认参数运行：
 sc-rust --user admin --pass admin --addr 127.0.0.1:8310 --web-port 80 --log-level info
-参数说明可以用-h(sc-rust -h)查看。
+参数说明可以运行sc-rust -h查看。
 
 运行后可以打开
-http://127.0.0.1/hzbit/video/sse-test 查看sse测试页面
-http://127.0.0.1/hzbit/video/ws-test 查看websocket测试页面
+http://127.0.0.1/hzbit/video/sse-test 查看sse连接的demo页面
+http://127.0.0.1/hzbit/video/ws-test 查看websocket连接的demo页面
+http://127.0.0.1/hzbit/video/device 查看全部设备信息(返回json格式，此接口后台需多次调用视频服务器tcp接口，性能较差，不建议频繁使用)

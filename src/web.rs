@@ -4,10 +4,10 @@ use futures::stream::Stream;
 use axum::{
     routing::get, 
     Router,  
-    middleware::from_extractor, extract::{WebSocketUpgrade, ws::{WebSocket, Message}}, http::HeaderMap, response::{Response, Sse, sse::{Event, KeepAlive}, Html}
+    middleware::from_extractor, extract::{WebSocketUpgrade, ws::{WebSocket, Message}}, http::HeaderMap, response::{Response, Sse, sse::{Event, KeepAlive}, Html}, Json
 };
 use tokio::{sync::broadcast::Sender,time::{Duration,timeout}};
-use crate::{web_auth, sc_auth};
+use crate::{web_auth, sc_auth::{self, DeviceGather}};
 
 pub async fn run(port:u16,user:Arc<String>,addr:Arc<String>,sender:Arc<Sender<String>>){
     log::info!("web listen on {}",port);
@@ -34,11 +34,8 @@ pub async fn run(port:u16,user:Arc<String>,addr:Arc<String>,sender:Arc<Sender<St
     .unwrap();
 }
 
-async fn get_devices(user:Arc<String>,addr:Arc<String>)->String{
-    match sc_auth::device_info(user, addr).await{
-        Ok(devices)=>{serde_json::to_string(&devices).unwrap_or("".to_string())},
-        Err(e)=>format!("{}",e)
-    }
+async fn get_devices(user:Arc<String>,addr:Arc<String>)->Json<DeviceGather>{
+    Json(sc_auth::device_info(user, addr).await.unwrap())
 }
 
 async fn home()->String{
@@ -130,7 +127,7 @@ Html(r#"<!DOCTYPE html>
         window.addEventListener("load", init, false);
         </script>
     </head>
-    <div id="output" style="height:600px;width:1024px;resize:both;overflow:scroll;"></div>
+    <div id="output" style="height:800px;width:600px;resize:both;overflow:scroll;"></div>
 </html>"#)
         )
 }
@@ -146,7 +143,7 @@ Html(r#"<!DOCTYPE html>
 <html>
     <head>
         <script>
-            const socket = new WebSocket("ws://127.0.0.1/hzbit/video/gps-ws");
+            const socket = new WebSocket("ws://" + window.location.host + ":" + window.location.port +"/hzbit/video/gps-ws");
             socket.withCredentials = true;
             socket.headers = {
                 "AUTHORIZATION": "test"
@@ -167,7 +164,7 @@ Html(r#"<!DOCTYPE html>
         }
         </script>
     </head>
-    <div id="output" style="height:600px;width:1024px;resize:both;overflow:scroll;"></div>
+    <div id="output" style="height:800px;width:600px;resize:both;overflow:scroll;"></div>
 </html>"#)
         )
 }
