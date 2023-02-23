@@ -8,9 +8,7 @@ use tokio::io::BufReader;
 use crate::{error::CustomizeError,gps};
 
 fn parse_command<'a>(s:&'a str)->Vec<Vec<&'a str>>{
-    s.split(",")
-    .map(|cell|cell.split(" ").collect::<Vec<&str>>())
-    .collect::<Vec<Vec<&str>>>()
+    s.split(",").map(|cell|cell.split(" ").collect::<Vec<&str>>()).collect::<Vec<Vec<&str>>>()
 }
 pub struct Client{
     pub sender:Arc<Sender<String>>,
