@@ -13,3 +13,7 @@ sc-rust --user admin --pass admin --addr 127.0.0.1:8310 --web-port 80 --log-leve
 http://127.0.0.1/hzbit/video/sse-test 查看sse连接的demo页面
 http://127.0.0.1/hzbit/video/ws-test 查看websocket连接的demo页面(websocket如果连续十秒没有数据会发一条keepalive包,sse不发keepalive包)
 http://127.0.0.1/hzbit/video/device 查看全部设备信息(返回json格式，此接口后台需多次调用视频服务器tcp接口，性能较差，不建议频繁使用)
+
+运行在老版本windows可能会有依赖问题，可以在编译时添加以下配置文件编译为无依赖的单体程序
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

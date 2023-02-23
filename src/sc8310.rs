@@ -39,7 +39,7 @@ impl Client{
         loop{
             match self.connect().await{
                 Ok(_)=>{},
-                Err(e)=>println!("{}",e)
+                Err(e)=>log::error!("{}",e)
             }
             tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
         }
