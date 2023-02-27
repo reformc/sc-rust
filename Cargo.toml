@@ -17,3 +17,7 @@ async-trait = "*"
 encoding = "*"
 tokio-stream ="*"
 futures = "*"
+
+[profile.release]
+opt-level = 'z'
+lto=true
