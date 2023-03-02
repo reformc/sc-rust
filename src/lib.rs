@@ -32,7 +32,7 @@ struct Args {
     log_level: String,
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]//使用单线程工作会占用更少的内存
 pub async fn run() {
     let args = Args::parse();
     match &args.log_level as &str {
