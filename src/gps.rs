@@ -16,11 +16,17 @@ pub fn parse_gps(line: &str) -> Result<GpsInfo, Box<dyn Error>> {
 fn gps_type(id: u16, info: &str) -> Result<GpsInfo, Box<dyn Error>> {
     let a = info.split("\\c").collect::<Vec<&str>>();
     log::debug!("{},,{:?}", info, a);
+    if a.len()<3{
+        return Err(error::CustomizeError::new(-1, info))
+    }
     if a[2] != "A" {
         return Err(error::CustomizeError::new(-1, "gps status is not A"));
     }
     match a[0] as &str {
         "$GPRMC" | "$GNRMC" => {
+            if a.len()<9{
+                return Err(error::CustomizeError::new(-1, info))
+            }
             Ok(GpsInfo {
                 id,
                 lon: parse_gps_wgs84(&a[5])?,
@@ -30,13 +36,18 @@ fn gps_type(id: u16, info: &str) -> Result<GpsInfo, Box<dyn Error>> {
                 //time:parse_time(&a[1], &a[10])
             })
         }
-        "$GPGGA" => Ok(GpsInfo {
-            id,
-            lon: parse_gps_wgs84(&a[4])?,
-            lat: parse_gps_wgs84(&a[2])?,
-            vel: 0.0,
-            ang: 0.0,
-        }),
+        "$GPGGA" => {
+            if a.len()<5{
+                return Err(error::CustomizeError::new(-1, info))
+            }            
+            Ok(GpsInfo {
+                id,
+                lon: parse_gps_wgs84(&a[4])?,
+                lat: parse_gps_wgs84(&a[2])?,
+                vel: 0.0,
+                ang: 0.0,
+            })
+        },
         "$BDGSV" | "$GNGGA" | "$GPGSV" => Err(error::CustomizeError::new(
             -1,
             "$BDGSV,$GNGGA,$GPGSV can not parse error",

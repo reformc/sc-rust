@@ -28,28 +28,26 @@ pub async fn run(port: u16, user: Arc<String>, addr: Arc<String>, sender: Arc<Se
     log::info!("web listen on {}", port);
     let app = Router::new()
         .route(
-            "/hzbit/video/gps-ws",
+            "/hzbit/video/gps-ws",//websocket服务
             get({
-                //websocket服务
-                let channel_sender = Arc::clone(&sender);
+                let channel_sender = Arc::clone(&sender);//GPS广播通道,由sc8310任务传入,跨线程调用使用Arc引用。
                 move |headers, ws| channel_ws(headers, ws, channel_sender)
             }),
         )
         .route(
-            "/hzbit/video/gps-sse",
+            "/hzbit/video/gps-sse",//sse服务
             get({
-                //sse服务
                 let channel_sender = Arc::clone(&sender);
                 move |headers| channel_sse(headers, channel_sender)
             }),
         )
         .route(
-            "/hzbit/video/device",
+            "/hzbit/video/device",//获取设备信息接口
             get(move || get_devices(user.clone(), addr.clone())),
-        ) //获取设备信息接口
+        ) 
         .route_layer(from_extractor::<web_auth::RequireAuth>()) //鉴权中间件
-        .route("/hzbit/video/sse-test", get(sse_test)) //sse调试页面
-        .route("/hzbit/video/ws-test", get(ws_test)) //ws调试页面
+        .route("/hzbit/video/sse-test", get(sse_test)) //sse demo页面
+        .route("/hzbit/video/ws-test", get(ws_test)) //ws demo页面
         .route("/", get(home));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));

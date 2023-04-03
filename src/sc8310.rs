@@ -13,11 +13,11 @@ fn parse_command<'a>(s: &'a str) -> Vec<Vec<&'a str>> {
         .collect::<Vec<Vec<&str>>>()
 }
 pub struct Client {
-    pub sender: Arc<Sender<String>>,
-    user: String,
-    pass: String,
-    addr: String,
-    act_port: u16,
+    pub sender: Arc<Sender<String>>,//GPS广播通道
+    user: String,//连接sc服务使用的用户名
+    pass: String,//连接sc服务使用的密码
+    addr: String,//sc服务地址
+    act_port: u16,//sc服务的查询端口,默认为8330
     server_name: String,
     command_id: usize,
 }
