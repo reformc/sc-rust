@@ -5,6 +5,7 @@ mod gps;
 mod sc8310;
 mod sc_auth;
 mod web;
+#[cfg(feature = "auth")]
 mod web_auth;
 
 #[derive(Parser)]

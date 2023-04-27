@@ -1,9 +1,12 @@
 [package]
 name = "sc-rust"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["auth"]
+auth = ["async-trait"]
 
 [dependencies]
 tokio = {version="*",features=["net","macros","rt","io-util","sync","time"]}
@@ -13,7 +16,7 @@ axum = {version = "*",features=["ws"]}
 serde_json = "*"
 simple_logger = "*"
 log = "*"
-async-trait = "*"
+async-trait = {version = "*",optional = true }
 encoding = "*"
 tokio-stream ="*"
 futures = "*"
@@ -21,3 +24,9 @@ futures = "*"
 [profile.release]
 opt-level = 'z'
 lto=true
+
+[profile.minimal]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1

@@ -1,14 +1,16 @@
 use crate::{
-    sc_auth::{self, DeviceGather},
-    web_auth,
+    sc_auth::{self, DeviceGather}
 };
+#[cfg(feature = "auth")]
+use crate::web_auth;
+#[cfg(feature = "auth")]
+use axum::middleware::from_extractor;
 use axum::{
     extract::{
         ws::{Message, WebSocket},
         WebSocketUpgrade,
     },
     http::HeaderMap,
-    middleware::from_extractor,
     response::{
         sse::{Event, KeepAlive},
         Html, Response, Sse,
@@ -44,8 +46,10 @@ pub async fn run(port: u16, user: Arc<String>, addr: Arc<String>, sender: Arc<Se
         .route(
             "/hzbit/video/device",//获取设备信息接口
             get(move || get_devices(user.clone(), addr.clone())),
-        ) 
-        .route_layer(from_extractor::<web_auth::RequireAuth>()) //鉴权中间件
+        );
+    #[cfg(feature = "auth")]
+    let app = app.route_layer(from_extractor::<web_auth::RequireAuth>());//鉴权中间件
+    let app = app
         .route("/hzbit/video/sse-test", get(sse_test)) //sse demo页面
         .route("/hzbit/video/ws-test", get(ws_test)) //ws demo页面
         .route("/", get(home));
