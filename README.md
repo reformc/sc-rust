@@ -21,3 +21,5 @@ rustflags = ["-C", "target-feature=+crt-static"]
 将鉴权代码加入"auth" feature并默认引入，
 若不需要鉴权代码，编译时加上参数 --no-default-features，例如：
 cross build --target=mips-unknown-linux-musl --profile minimal --no-default-features
+
+./upx --best --lzma rathole

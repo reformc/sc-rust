@@ -22,6 +22,7 @@ tokio-stream ="*"
 futures = "*"
 
 [profile.release]
+strip = true
 opt-level = 'z'
 lto=true
 
@@ -30,3 +31,6 @@ inherits = "release"
 opt-level = "z"
 lto = true
 codegen-units = 1
+debug = false
+panic = 'abort'
+rpath = false

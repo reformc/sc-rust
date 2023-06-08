@@ -55,6 +55,9 @@ impl Client {
         stream.readable().await?;
         let mut buf = [0; 1024];
         let n = stream.try_read(&mut buf)?;
+        if n==0{
+            return Err("receive none".into())
+        }
         let s = String::from_utf8((&buf[0..n]).to_vec())?;
         if !s.contains("Id is OK, authentication required") {
             return Err(CustomizeError::new(-1, &s));
