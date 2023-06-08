@@ -27,7 +27,6 @@ use tokio::{
 use tokio_stream::StreamExt as _;
 
 pub async fn run(port: u16, user: Arc<String>, addr: Arc<String>, sender: Arc<Sender<String>>) {
-    log::info!("web listen on {}", port);
     let app = Router::new()
         .route(
             "/hzbit/video/gps-ws",//websocket服务
