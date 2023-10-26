@@ -11,7 +11,7 @@ mod web_auth;
 #[derive(Parser)]
 #[clap(
     author = "reform <reformgg@gmail.com>",
-    version = "0.2.0",
+    version = "0.2.1",
     about = "sc数据转web、websocket、sse",
     long_about = "sc数据转web、websocket、sse"
 )]

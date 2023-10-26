@@ -1,6 +1,4 @@
-use crate::{
-    sc_auth::{self, DeviceGather}
-};
+use crate::sc_auth::{self, DeviceGather};
 #[cfg(feature = "auth")]
 use crate::web_auth;
 #[cfg(feature = "auth")]

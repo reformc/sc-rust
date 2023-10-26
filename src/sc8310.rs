@@ -3,8 +3,9 @@ use std::error::Error;
 use std::sync::Arc;
 use tokio::io::BufReader;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
-use tokio::net::tcp::OwnedWriteHalf;
+use tokio::net::tcp::{OwnedWriteHalf, OwnedReadHalf};
 use tokio::net::TcpStream;
+use tokio::select;
 use tokio::sync::broadcast::{self, Sender};
 
 fn parse_command<'a>(s: &'a str) -> Vec<Vec<&'a str>> {
@@ -47,11 +48,8 @@ impl Client {
     }
 
     pub async fn connect(&mut self) -> Result<(), Box<dyn Error>> {
-        let sender = self.sender.clone();
         let mut stream = TcpStream::connect(&self.addr).await?;
-        stream
-            .write_all(format!("USER 23176, {}\r\n", &self.user).as_bytes())
-            .await?;
+        stream.write_all(format!("USER 23176, {}\r\n", &self.user).as_bytes()).await?;
         stream.readable().await?;
         let mut buf = [0; 1024];
         let n = stream.try_read(&mut buf)?;
@@ -63,13 +61,29 @@ impl Client {
             return Err(CustomizeError::new(-1, &s));
         }
         stream.writable().await?;
-        stream
-            .write_all(format!("PASS 23177, {}\r\n", self.pass).as_bytes())
-            .await?;
+        stream.write_all(format!("PASS 23177, {}\r\n", self.pass).as_bytes()).await?;
         let (read_half, write_half) = stream.into_split();
-        let reader = BufReader::new(read_half);
+        select! {
+            res = Self::keepalive(write_half, self.command_id) => {
+                if let Err(e)=res{
+                    log::error!("{}",e);
+                }
+                log::info!("thread_keepalive exit");
+            }
+            res = self.main_stream(read_half) => {
+                if let Err(e)=res{
+                    log::error!("{}",e);
+                }
+                log::info!("thread_stream exit");
+            }
+        }
+        Ok(())
+    }
+
+    async fn main_stream(&mut self,read_half:OwnedReadHalf,)->Result<(), Box<dyn Error+Send+Sync>>{
+        let sender = self.sender.clone();
+        let reader = BufReader::new(read_half);   
         let mut lines = reader.lines();
-        tokio::spawn(Client::keepalive(write_half, self.command_id));
         loop {
             match lines.next_line().await? {
                 Some(line) => {
@@ -123,21 +137,20 @@ impl Client {
                     log::debug!("{}", line)
                 }
                 None => {
-                    return Err(CustomizeError::new(-1, "recv None"));
+                    return Err("recv None".into());
                 }
             }
         }
     }
 
-    async fn keepalive(mut write_half: OwnedWriteHalf, mut command_id: usize) {
+    async fn keepalive(mut write_half: OwnedWriteHalf, mut command_id: usize)->Result<(),Box<dyn std::error::Error+Send+Sync>> {
         loop {
             tokio::time::sleep(tokio::time::Duration::from_secs(20)).await;
             command_id += 1;
-            write_half.writable().await.unwrap();
+            write_half.writable().await?;
             write_half
                 .write(format!("CHB {},\r\n", command_id).as_bytes())
-                .await
-                .unwrap();
+                .await?;
         }
     }
 }
